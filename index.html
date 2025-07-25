@@ -1,112 +1,212 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>IPTV Thai Digital</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>เว็บดู IPTV - TV CHAK</title>
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
-    .list { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; justify-content: center; }
-    .button { background: #222; padding: 10px; width: 140px; text-align: center; border-radius: 8px; cursor: pointer; box-shadow: 0 0 5px #333;}
-    .button:hover { background: #333; }
-    .button img { width: 100%; border-radius: 6px; }
-    #player-container { display: flex; justify-content: center; padding: 10px; }
-    video { width: 100%; max-width: 800px; height: 450px; border: none; background: #000; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #111;
+      color: #eee;
+    }
+    header {
+      background: #222;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    button.link-btn {
+      background: #444;
+      border: none;
+      color: #eee;
+      padding: 8px 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    button.link-btn:hover {
+      background: #666;
+    }
+    main {
+      display: flex;
+      flex-direction: row;
+      height: calc(100vh - 50px);
+    }
+    #channelList {
+      width: 280px;
+      background: #222;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    #channelList .channel {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #333;
+      transition: background 0.2s;
+    }
+    #channelList .channel:hover {
+      background: #444;
+    }
+    #channelList .channel img {
+      width: 40px;
+      height: 24px;
+      object-fit: contain;
+      margin-right: 10px;
+      border-radius: 3px;
+      background: #000;
+    }
+    #channelList .channel.selected {
+      background: #555;
+    }
+    #playerContainer {
+      flex-grow: 1;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    video#player {
+      width: 100%;
+      height: 100%;
+      max-height: 100vh;
+      background: black;
+    }
+    /* Scrollbar for channel list */
+    #channelList::-webkit-scrollbar {
+      width: 6px;
+    }
+    #channelList::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
 
-  <div id="player-container">
-    <video id="video" controls autoplay playsinline></video>
+<header>
+  <h1>เว็บดู IPTV - TV CHAK</h1>
+  <button class="link-btn" onclick="window.open('https://swisszz.github.io/iptv-host/', '_blank')">ไปยัง iptv-host</button>
+</header>
+
+<main>
+  <div id="channelList"></div>
+  <div id="playerContainer">
+    <video id="player" controls autoplay></video>
   </div>
+</main>
 
-  <div id="channels" class="list"></div>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+  // รายการช่อง IPTV
+  const channels = [
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/4kmiht", name: "CH7", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffac/7hd/7hd.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/pkxl3", name: "Nation", url: "https://nationtv-1jdcjo.cdn.byteark.com/fleetstream/nationtvlive/1080p/index.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/d2ksaw", name: "CH8", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffbe/ch8/ch8.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/r0we5", name: "Nation CHAK", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffcc/nation/nation.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/9f0xf", name: "CH3 HD", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffae/3hd/3hd.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/l869p", name: "TNN", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffdc/tnn/tnn.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/b8u7i", name: "TPTV", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffec/tptv/tptv.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/65b58o", name: "Amarin HD", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffad/amarin/amarin.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/409e5", name: "Thairath HD", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffaf/thairath/thairath.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/3gdhl", name: "Channel 8", url: "https://cdn-th-vip.login.in.th:443/ch8/ch8/chunklist.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/dguzu", name: "Workpoint HD", url: "https://global-media.sooplive.com/live/video/workpoint/1920x1080/playlist.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/dguzu", name: "Workpoint", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffcb/workpoint/workpoint.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/49yt5v", name: "NBT", url: "https://lb1-live-mv.v2h-cdn.com/hls/fffe/nbt/nbt.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://bit.ly/3aaooNF", name: "CH5", url: "https://lb1-live-mv.v2h-cdn.com/hls/fffb/5hd/5hd.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/y2z253", name: "Thai Chaiyo", url: "https://live-iptv.thaichaiyo.tv/tcy/live-720P.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/q3t23i", name: "Looktung Network FM", url: "http://vip.login.in.th:1935/looktungnetwork1/looktungnetwork1/playlist.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/dnycy", name: "Looktung LAKTHAI FM", url: "http://radio11.plathong.net:8896/;stream.mp3" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/unxb8", name: "JKN", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffda/jkn18/jkn18.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://bit.ly/3R57wIK", name: "Thai PBS", url: "https://lb1-live-mv.v2h-cdn.com/hls/fffd/tpbs/tpbs.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://is.gd/BEhrf8", name: "True sport", url: "https://is.gd/GNF8fw" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/ry89h", name: "T Sport", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffef/tsport/tsport.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/afnnk", name: "Mono 29", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffbc/mono29/mono29.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/83jvz", name: "Mcot", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffbb/mcot/mcot.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/ipdj6", name: "One", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffba/one/one.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/wmbwp", name: "PPTV", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffab/pptv/pptv.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/adt8o", name: "GMM25", url: "https://bcovlive-a.akamaihd.net/57d4bf695e80436d9335f4f50adbe438/ap-southeast-1/6415628290001/7e85dc4a59904e45b4fdffebd62e1d82/playlist_ssaiM.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/wmbwp", name: "GMM25", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffbf/gmm25/gmm25.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/0ws87l", name: "True 24", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffca/true24/true24.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/s9j3kg", name: "News 1", url: "http://news1.live14.com/stream/news1.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/4nvv0", name: "Suwannabhumi", url: "https://live.bangkokstream.com:19360/suwannabhumi/suwannabhumi.m3u8" },
+    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/baylk", name: "Police Chanell", url: "https://cdn-th-vip.livestreaming.in.th/policetv/policetv/playlist.m3u8" },
+    // ตัวอย่างหมวด MUSIC
+    { group: "🇹🇭TV CHAK MUSIC", logo: "https://n9.cl/g23v5", name: "Musica ʜᴅ | DANCE Latinos Hits 2K", url: "http://1.84423.xyz:8000/PSG@273Res/0OPSGMessi24/3182" },
+    { group: "🇹🇭TV CHAK MUSIC", logo: "https://bit.ly/3ybR40A", name: "KroneHit TV Music", url: "https://bitcdn-kronehit.bitmovin.com/v2/hls/playlist.m3u8" }
+  ];
 
-  <script>
-    const kauthToken = 'ใส่-kauth-token-ของคุณ-here';
+  const video = document.getElementById('player');
+  const channelList = document.getElementById('channelList');
+  let hls;
 
-    const channelNames = [
-      'CH3 HD', 'CH3 HD Backup',
-      'CH5 HD', 'CH5 HD Backup',
-      'CH7 HD', 'CH7 HD Backup',
-      'CH9 HD', 'CH9 HD Backup',
-      'WorkPoint HD', 'WorkPoint HD Backup',
-      'GMM HD', 'GMM HD Backup',
-      'Mono HD', 'Mono HD Backup',
-      'CH8 HD', 'CH8 HD Backup',
-      'ONE HD', 'ONE HD Backup',
-      'Amarin HD','Amarin HD Backup',
-      'Thairath TV HD','Thairath TV HD Backup',
-      'PPTV HD','PPTV HD Backup',
-      'Nation TV HD','Nation TV HD Backup',
-      'JKN TV HD','JKN TV HD Backup',
-      'TNN TV HD','TNN TV HD Backup',
-      'Thai PBS TV HD','Thai PBS TV HD Backup',
-      'NBT TV HD','NBT TV HD Backup'
-    ];
 
-    const channelCodes = [
-      'hd-ch3','hd-ch3bkp','hd-ch5','hd-ch5bkp','hd-ch7','hd-ch7bkp',
-      'hd-ch9','hd-ch9bkp','hd-workpoint','hd-workpointbkp','sd-gmmchannel','sd-gmmchannelbkp',
-      'hd-mono','hd-monobkp','hd-ch8','hd-ch8bkp','hd-gmmone','hd-gmmonebkp',
-      'hd-amarin','hd-amarinbkp','hd-thairath','hd-thairathbkp','hd-pptv','hd-pptvbkp',
-      'sd-nation','sd-nationbkp','hd-jkn','hd-jknbkp','sd-tnn24','sd-tnn24bkp',
-      'hd-tpbs','th-tpbs','sd-nbt','sd-nbtbkp'
-    ];
+  // สร้างลิสต์ช่องใน sidebar
+  function buildChannelList() {
+    channelList.innerHTML = '';
+    channels.forEach((channel, index) => {
+      const div = document.createElement('div');
+      div.className = 'channel';
+      div.dataset.index = index;
 
-    const channelLogos = channelCodes.map(code => `https://static.uflixtv.com/images/tv/channels_icons/${code}.png`);
+      div.innerHTML = `
+        <img src="${channel.logo}" alt="${channel.name} logo" />
+        <span>${channel.name}</span>
+      `;
 
-    const video = document.getElementById('video');
-    const channelsDiv = document.getElementById('channels');
-
-    async function login() {
-      const resp = await fetch(`https://cloud.ufxtv.com/api/user/login/?user_email=BE0134&user_password=1111&kauth=${kauthToken}`);
-      const txt = await resp.text();
-      const m = txt.match(/<user_loggedsession>(.*?)<\/user_loggedsession>/);
-      return m ? m[1] : null;
-    }
-
-    async function getClearUrl(session, code) {
-      const resp = await fetch(`https://cloud.ufxtv.com/api/tv/channels/play/?c=${code}&kauth=${kauthToken}&user_loggedsession=${session}`);
-      let txt = await resp.text();
-      if (txt.includes('session failed')) {
-        session = await login();
-        const next = await fetch(`https://cloud.ufxtv.com/api/tv/channels/play/?c=${code}&kauth=${kauthToken}&user_loggedsession=${session}`);
-        txt = await next.text();
-      }
-      const m = txt.match(/<clear_url>(.*?)<\/clear_url>/);
-      return m ? m[1] : null;
-    }
-
-    async function playChannel(index) {
-      const session = await login();
-      const streamUrl = await getClearUrl(session, channelCodes[index]);
-      if (streamUrl) {
-        if (Hls.isSupported()) {
-          const hls = new Hls();
-          hls.loadSource(streamUrl);
-          hls.attachMedia(video);
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = streamUrl;
-        }
-        video.play();
-      } else alert('ไม่สามารถเล่นช่องได้');
-    }
-
-    function initUI() {
-      channelsDiv.innerHTML = '';
-      channelCodes.forEach((code, idx) => {
-        const btn = document.createElement('div');
-        btn.className = 'button';
-        btn.innerHTML = `<img src="${channelLogos[idx]}" alt=""><div>${channelNames[idx]}</div>`;
-        btn.onclick = () => playChannel(idx);
-        channelsDiv.appendChild(btn);
+      div.addEventListener('click', () => {
+        selectChannel(index);
       });
-    }
 
-    initUI();
-  </script>
+      channelList.appendChild(div);
+    });
+  }
+
+  // เล่นช่อง
+  function selectChannel(index) {
+    const channel = channels[index];
+
+    // ไฮไลท์ช่องที่เลือก
+    document.querySelectorAll('#channelList .channel').forEach((el) => {
+      el.classList.remove('selected');
+    });
+    document.querySelector(`#channelList .channel[data-index="${index}"]`).classList.add('selected');
+
+    // เล่นช่อง m3u8 ผ่าน hls.js หรือ native
+    if (hls) {
+      hls.destroy();
+      hls = null;
+    }
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = channel.url;
+      video.play();
+    } else if (Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(channel.url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play();
+      });
+    } else {
+      alert('ไม่รองรับการเล่นวิดีโอ HLS ในเบราว์เซอร์นี้');
+    }
+  }
+
+  // เริ่มต้น
+  buildChannelList();
+  selectChannel(0); // เล่นช่องแรกอัตโนมัติ
+
+</script>
 
 </body>
 </html>
