@@ -32,23 +32,32 @@
     }
 
     main {
-      max-width: 960px;
+      max-width: 1200px;
       width: 100%;
       padding: 20px;
       box-sizing: border-box;
     }
 
+    #content {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
     #channels {
-      width: 100%;
-      max-height: 500px;
+      flex: 1 1 300px;
+      max-height: 80vh;
       overflow-y: auto;
-      margin-top: 20px;
       background: #1c1c1c;
       border-radius: 8px;
       padding: 10px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 250px;
     }
 
     #channels button {
@@ -63,6 +72,7 @@
       color: #fff;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
       transition: transform 0.2s, background 0.2s;
+      font-size: 16px;
     }
 
     #channels button:hover {
@@ -79,23 +89,18 @@
     }
 
     video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      flex: 2 1 500px;
+      max-height: 80vh;
+      width: 100%;
       object-fit: contain;
       background: black;
-      z-index: 999;
+      border-radius: 8px;
       display: none;
     }
 
     #backHomeBtn {
       display: none;
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      z-index: 1000;
+      margin-top: 20px;
       padding: 10px 18px;
       font-size: 14px;
       background: #00aaff;
@@ -110,16 +115,23 @@
     #backHomeBtn:hover {
       background: #0088cc;
     }
+
+    @media screen and (max-width: 768px) {
+      #content {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
-
 <body>
-  <header id="mainHeader">Simple IPTV Portal</header>
+  <header>IPTV Thailand</header>
 
   <main>
-    <video id="player" controls autoplay></video>
+    <div id="content">
+      <div id="channels">กำลังโหลดช่อง...</div>
+      <video id="player" controls autoplay></video>
+    </div>
     <button id="backHomeBtn">⬅ กลับหน้าแรก</button>
-    <div id="channels">กำลังโหลดช่อง...</div>
   </main>
 
   <script>
@@ -127,7 +139,7 @@
     const backHomeBtn = document.getElementById('backHomeBtn');
     const video = document.getElementById('player');
     const channelsDiv = document.getElementById('channels');
-    const header = document.getElementById('mainHeader');
+    const header = document.querySelector('header');
     let hls = null;
 
     backHomeBtn.onclick = () => {
@@ -163,14 +175,14 @@
         if (line.startsWith('#EXTINF')) {
           const nameMatch = line.match(/,(.*)/);
           const logoMatch = line.match(/tvg-logo="(.*?)"/);
-          currentName = nameMatch ? nameMatch[1] : 'Unknown Channel';
+          currentName = nameMatch ? nameMatch[1] : 'ไม่ทราบชื่อช่อง';
           currentLogo = logoMatch ? logoMatch[1] : '';
         } else if (line.startsWith('http')) {
           const btn = document.createElement('button');
 
           const logoImg = document.createElement('img');
           logoImg.className = 'channel-logo';
-          logoImg.src = currentLogo || 'https://via.placeholder.com/32?text=📺';
+          logoImg.src = currentLogo || 'https://via.placeholder.com/40x40?text=📺';
           logoImg.alt = currentName;
 
           const label = document.createElement('span');
@@ -204,18 +216,6 @@
         video.play();
       } else {
         alert('เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอนี้');
-      }
-
-      requestFullscreen(video);
-    }
-
-    function requestFullscreen(element) {
-      if (element.requestFullscreen) {
-        element.requestFullscreen();
-      } else if (element.webkitRequestFullscreen) {
-        element.webkitRequestFullscreen();
-      } else if (element.msRequestFullscreen) {
-        element.msRequestFullscreen();
       }
     }
 
