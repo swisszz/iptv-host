@@ -4,174 +4,222 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IPTV Thailand</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     body {
+      font-family: 'Kanit', sans-serif;
+      background: #0e0e0e;
+      color: #eee;
       margin: 0;
-      font-family: sans-serif;
-      background: #121212;
-      color: white;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
 
     header {
-      text-align: center;
+      background: #1a1a1a;
+      width: 100%;
       padding: 16px;
-      font-size: 24px;
+      box-sizing: border-box;
+      text-align: center;
+      font-size: 26px;
       font-weight: bold;
-      background: #1f1f1f;
       color: #00d0ff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     }
 
-    #container {
-      display: flex;
-      flex-direction: row;
-      height: calc(100vh - 64px); /* 64px = header + margin */
+    main {
+      max-width: 960px;
+      width: 100%;
+      padding: 20px;
+      box-sizing: border-box;
     }
 
     #channels {
-      width: 50%;
+      width: 100%;
+      max-height: 500px;
       overflow-y: auto;
-      background: #181818;
+      margin-top: 20px;
+      background: #1c1c1c;
+      border-radius: 8px;
       padding: 10px;
-      box-sizing: border-box;
-      border-right: 2px solid #333;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
     }
 
     #channels button {
       display: flex;
       align-items: center;
-      gap: 10px;
-      width: 100%;
-      background: #2a2a2a;
+      gap: 12px;
+      background: #2b2b2b;
       border: none;
-      padding: 10px;
-      color: #fff;
-      font-size: 16px;
-      margin-bottom: 8px;
-      border-radius: 6px;
+      padding: 10px 12px;
+      border-radius: 10px;
       cursor: pointer;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s, background 0.2s;
     }
 
     #channels button:hover {
-      background: #333;
+      background: #3a3a3a;
+      transform: scale(1.03);
     }
 
     .channel-logo {
       width: 40px;
       height: 40px;
       object-fit: contain;
-      border-radius: 4px;
+      border-radius: 6px;
       background: white;
     }
 
-    #video-container {
-      width: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: black;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-
     video {
-      width: 100%;
-      height: auto;
-      max-height: 90%;
-      border-radius: 8px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
       background: black;
+      z-index: 999;
+      display: none;
     }
 
-    @media (max-width: 768px) {
-      #container {
-        flex-direction: column;
-      }
-      #channels, #video-container {
-        width: 100%;
-        height: 50%;
-      }
+    #backHomeBtn {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 1000;
+      padding: 10px 18px;
+      font-size: 14px;
+      background: #00aaff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 6px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    #backHomeBtn:hover {
+      background: #0088cc;
     }
   </style>
 </head>
+
 <body>
+  <header id="mainHeader">Simple IPTV Portal</header>
 
-<header>IPTV Thailand</header>
-
-<div id="container">
-  <div id="channels">กำลังโหลดช่อง...</div>
-  <div id="video-container">
+  <main>
     <video id="player" controls autoplay></video>
-  </div>
-</div>
+    <button id="backHomeBtn">⬅ กลับหน้าแรก</button>
+    <div id="channels">กำลังโหลดช่อง...</div>
+  </main>
 
-<script>
-  const m3uUrl = "https://swisszz.github.io/iptv-host/thailand.m3u";
-  const video = document.getElementById('player');
-  const channelsDiv = document.getElementById('channels');
-  let hls = null;
+  <script>
+    const m3uUrl = "https://swisszz.github.io/iptv-host/thailand.m3u";
+    const backHomeBtn = document.getElementById('backHomeBtn');
+    const video = document.getElementById('player');
+    const channelsDiv = document.getElementById('channels');
+    const header = document.getElementById('mainHeader');
+    let hls = null;
 
-  async function loadM3u(url) {
-    try {
-      const res = await fetch(url);
-      const text = await res.text();
-      parseM3u(text);
-    } catch (err) {
-      channelsDiv.textContent = 'โหลดช่องผิดพลาด: ' + err.message;
-    }
-  }
-
-  function parseM3u(data) {
-    const lines = data.split('\n');
-    let currentName = '';
-    let currentLogo = '';
-    channelsDiv.innerHTML = '';
-
-    lines.forEach(line => {
-      line = line.trim();
-      if (line.startsWith('#EXTINF')) {
-        const nameMatch = line.match(/,(.*)/);
-        const logoMatch = line.match(/tvg-logo="(.*?)"/);
-        currentName = nameMatch ? nameMatch[1] : 'ไม่ทราบชื่อช่อง';
-        currentLogo = logoMatch ? logoMatch[1] : '';
-      } else if (line.startsWith('http')) {
-        const btn = document.createElement('button');
-
-        const logoImg = document.createElement('img');
-        logoImg.className = 'channel-logo';
-        logoImg.src = currentLogo || 'https://via.placeholder.com/40?text=📺';
-        logoImg.alt = currentName;
-
-        const label = document.createElement('span');
-        label.textContent = currentName;
-
-        btn.appendChild(logoImg);
-        btn.appendChild(label);
-        btn.onclick = () => playStream(line);
-        channelsDiv.appendChild(btn);
+    backHomeBtn.onclick = () => {
+      if (hls) {
+        hls.destroy();
+        hls = null;
       }
-    });
-  }
+      video.pause();
+      video.src = "";
+      video.style.display = "none";
+      backHomeBtn.style.display = "none";
+      header.style.display = "block";
+    };
 
-  function playStream(url) {
-    if (hls) {
-      hls.destroy();
-      hls = null;
+    async function loadM3u(url) {
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        parseM3u(text);
+      } catch (err) {
+        channelsDiv.textContent = 'โหลดช่องผิดพลาด: ' + err.message;
+      }
     }
 
-    if (Hls.isSupported()) {
-      hls = new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = url;
-      video.play();
-    } else {
-      alert('เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอนี้');
+    function parseM3u(data) {
+      const lines = data.split('\n');
+      let currentName = '';
+      let currentLogo = '';
+      channelsDiv.innerHTML = '';
+
+      lines.forEach(line => {
+        line = line.trim();
+        if (line.startsWith('#EXTINF')) {
+          const nameMatch = line.match(/,(.*)/);
+          const logoMatch = line.match(/tvg-logo="(.*?)"/);
+          currentName = nameMatch ? nameMatch[1] : 'Unknown Channel';
+          currentLogo = logoMatch ? logoMatch[1] : '';
+        } else if (line.startsWith('http')) {
+          const btn = document.createElement('button');
+
+          const logoImg = document.createElement('img');
+          logoImg.className = 'channel-logo';
+          logoImg.src = currentLogo || 'https://via.placeholder.com/32?text=📺';
+          logoImg.alt = currentName;
+
+          const label = document.createElement('span');
+          label.textContent = currentName;
+
+          btn.appendChild(logoImg);
+          btn.appendChild(label);
+
+          btn.onclick = () => playStream(line);
+          channelsDiv.appendChild(btn);
+        }
+      });
     }
-  }
 
-  loadM3u(m3uUrl);
-</script>
+    function playStream(url) {
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
 
+      video.style.display = "block";
+      backHomeBtn.style.display = "inline-block";
+      header.style.display = "none";
+
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.play();
+      } else {
+        alert('เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอนี้');
+      }
+
+      requestFullscreen(video);
+    }
+
+    function requestFullscreen(element) {
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      }
+    }
+
+    loadM3u(m3uUrl);
+  </script>
 </body>
 </html>
