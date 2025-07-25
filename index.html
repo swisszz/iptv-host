@@ -4,11 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IPTV Thailand</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     body {
-      font-family: sans-serif;
-      background: #111;
+      font-family: 'Kanit', sans-serif;
+      background: #0e0e0e;
       color: #eee;
       margin: 0;
       padding: 0;
@@ -19,17 +20,19 @@
     }
 
     header {
-      background: #222;
+      background: #1a1a1a;
       width: 100%;
-      padding: 10px 20px;
+      padding: 16px;
       box-sizing: border-box;
       text-align: center;
-      font-size: 24px;
+      font-size: 26px;
       font-weight: bold;
+      color: #00d0ff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     }
 
     main {
-      max-width: 900px;
+      max-width: 960px;
       width: 100%;
       padding: 20px;
       box-sizing: border-box;
@@ -37,37 +40,42 @@
 
     #channels {
       width: 100%;
-      max-height: 400px;
+      max-height: 500px;
       overflow-y: auto;
       margin-top: 20px;
-      border: 1px solid #444;
-      background: #222;
+      background: #1c1c1c;
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
     }
 
     #channels button {
       display: flex;
       align-items: center;
-      gap: 10px;
-      width: 100%;
-      background: none;
+      gap: 12px;
+      background: #2b2b2b;
       border: none;
-      padding: 10px;
-      color: #eee;
-      text-align: left;
+      padding: 10px 12px;
+      border-radius: 10px;
       cursor: pointer;
-      border-bottom: 1px solid #333;
-      font-size: 16px;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s, background 0.2s;
     }
 
     #channels button:hover {
-      background: #333;
+      background: #3a3a3a;
+      transform: scale(1.03);
     }
 
     .channel-logo {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       object-fit: contain;
-      border-radius: 4px;
+      border-radius: 6px;
+      background: white;
     }
 
     video {
@@ -85,23 +93,26 @@
     #backHomeBtn {
       display: none;
       position: fixed;
-      top: 10px;
-      left: 10px;
+      top: 16px;
+      left: 16px;
       z-index: 1000;
-      padding: 8px 16px;
+      padding: 10px 18px;
       font-size: 14px;
-      background: #555;
+      background: #00aaff;
       border: none;
       color: white;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 6px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
 
     #backHomeBtn:hover {
-      background: #444;
+      background: #0088cc;
     }
   </style>
 </head>
+
 <body>
   <header id="mainHeader">Simple IPTV Portal</header>
 
