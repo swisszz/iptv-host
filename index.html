@@ -31,12 +31,13 @@
   .pin{width:100%;padding:10px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:#fff;margin-top:8px}
   .row{display:flex;gap:8px;margin-top:12px}
   .muted{color:var(--muted);font-size:.9rem;text-align:center;margin-top:8px}
-  @media(max-width:600px){ .channel{width:46%} #player{height:260px} }
+  @media(max-width:600px){ .channel{width:46%} #player{height:260px}}
 </style>
 </head>
 <body>
 <header>
-  <h1>IPTV Player — SWISSZZ </h1>
+  <h1>IPTV Player — SWISSZZ</h1>
+  
 </header>
 
 <div id="playerWrap">
@@ -58,22 +59,15 @@
       <button id="pinOk">ยืนยัน</button>
       <button id="pinCancel" style="background:#444;color:#fff">ยกเลิก</button>
     </div>
-    <div class="muted">ทิป: เปลี่ยนค่า PIN และ SECRET_KEY ในไฟล์นี้เพื่อความปลอดภัย</div>
+    <div class="muted"> <code>PIN_CODE</code> ของไฟล์นี้</div>
   </div>
 </div>
 
-<!-- CryptoJS CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
 /* ============== CONFIG ============== */
 const M3U_URL = "https://raw.githubusercontent.com/swisszz/CHAKIPTV/refs/heads/main/CHAKIPTV";
-
-
-const SECRET_KEY = "my-secret-key-123"; 
-
-
-const encryptedPin = "U2FsdGVkX1+PImA1SkGoqWpKZsP0uSx9HXKzAL2QJ7k=";
+const PIN_CODE = "7474"; 
 /* ==================================== */
 
 const wrap = document.getElementById("wrap");
@@ -136,9 +130,7 @@ function renderChannels(){
     const thumb = document.createElement("div");
     thumb.className = "thumb";
     const img = document.createElement("img");
-    img.onerror = ()=>{ 
-      img.src = "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'><rect fill=\'%23111111\' width=\'100%\' height=\'100%\'/></svg>"; 
-    }
+    img.onerror = ()=>{ img.src = "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'><rect fill=\'%23111111\' width=\'100%\' height=\'100%\'/></svg>"; }
     img.src = ch.logo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23131313' width='100%' height='100%'/></svg>";
     thumb.appendChild(img);
     const meta = document.createElement("div");
@@ -162,69 +154,54 @@ function renderChannels(){
 
 function onPlayClick(channel){
   if(channel.group && channel.group.includes("18+") && !unlocked){
+    // show modal
     pinInput.value = "";
     pinModal.classList.add("show");
     pinInput.focus();
-
+    // attach ok handler to play when validated
     const okHandler = ()=>{
-      const userPin = pinInput.value;
-      if(checkPin(userPin)){
+      if(pinInput.value === PIN_CODE){
         unlocked = true;
         pinModal.classList.remove("show");
         playChannel(channel.url);
         removeListeners();
-      } else {
+      }else{
         alert("รหัสไม่ถูกต้อง");
       }
     };
-
     const cancelHandler = ()=>{
       pinModal.classList.remove("show");
       removeListeners();
     };
-
     function removeListeners(){
       pinOk.removeEventListener("click", okHandler);
       pinCancel.removeEventListener("click", cancelHandler);
       pinInput.removeEventListener("keydown", enterHandler);
     }
-
     function enterHandler(e){
       if(e.key === "Enter") okHandler();
     }
-
     pinOk.addEventListener("click", okHandler);
     pinCancel.addEventListener("click", cancelHandler);
     pinInput.addEventListener("keydown", enterHandler);
-
     return;
   }
   playChannel(channel.url);
 }
 
-// เช็ค PIN โดยถอดรหัส encryptedPin แล้วเทียบค่า
-function checkPin(inputPin){
-  try {
-    const bytes = CryptoJS.AES.decrypt(encryptedPin, SECRET_KEY);
-    const originalPin = bytes.toString(CryptoJS.enc.Utf8);
-    return inputPin === originalPin;
-  } catch(e) {
-    console.error("Error decrypting PIN:", e);
-    return false;
-  }
-}
-
 function playChannel(url){
   currentUrl = url;
   setStatus("กำลังเล่น: " + url);
+  // destroy previous hls instance if any
   if(hlsInstance){
     try{ hlsInstance.destroy(); }catch(e){}
     hlsInstance = null;
   }
+  // if browser can play HLS natively
   if(player.canPlayType('application/vnd.apple.mpegurl')){
     player.src = url;
-    player.play().catch(()=>{});
-  } else if(window.Hls && Hls.isSupported()){
+    player.play().catch(()=>{ /* ignore */ });
+  }else if(window.Hls && Hls.isSupported()){
     hlsInstance = new Hls();
     hlsInstance.attachMedia(player);
     hlsInstance.on(Hls.Events.MEDIA_ATTACHED, ()=>{
@@ -243,18 +220,17 @@ function playChannel(url){
         setStatus("เกิดข้อผิดพลาด: " + (data && data.details || "unknown"));
       }
     });
-  } else {
+  }else{
     setStatus("เบราว์เซอร์นี้ไม่รองรับ HLS และ hls.js ไม่สามารถทำงานได้");
   }
 }
 
+/* small helper to avoid XSS in titles */
 function escapeHtml(str){
-  return String(str || "").replace(/[&<>"']/g, m => {
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
-  });
+  return String(str || "").replace(/[&<>"']/g, function(m){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]; });
 }
 
-/* เริ่มโหลดข้อมูลช่อง */
+/* init */
 fetchM3U();
 </script>
 </body>
