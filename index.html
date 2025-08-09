@@ -1,212 +1,237 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>เว็บดู IPTV - TV CHAK</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background: #111;
-      color: #eee;
-    }
-    header {
-      background: #222;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 1.2rem;
-    }
-    button.link-btn {
-      background: #444;
-      border: none;
-      color: #eee;
-      padding: 8px 12px;
-      font-size: 1rem;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: background 0.3s;
-    }
-    button.link-btn:hover {
-      background: #666;
-    }
-    main {
-      display: flex;
-      flex-direction: row;
-      height: calc(100vh - 50px);
-    }
-    #channelList {
-      width: 280px;
-      background: #222;
-      overflow-y: auto;
-      padding: 10px;
-    }
-    #channelList .channel {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      padding: 8px;
-      border-bottom: 1px solid #333;
-      transition: background 0.2s;
-    }
-    #channelList .channel:hover {
-      background: #444;
-    }
-    #channelList .channel img {
-      width: 40px;
-      height: 24px;
-      object-fit: contain;
-      margin-right: 10px;
-      border-radius: 3px;
-      background: #000;
-    }
-    #channelList .channel.selected {
-      background: #555;
-    }
-    #playerContainer {
-      flex-grow: 1;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-    }
-    video#player {
-      width: 100%;
-      height: 100%;
-      max-height: 100vh;
-      background: black;
-    }
-    /* Scrollbar for channel list */
-    #channelList::-webkit-scrollbar {
-      width: 6px;
-    }
-    #channelList::-webkit-scrollbar-thumb {
-      background: #555;
-      border-radius: 3px;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>IPTV Player (PIN สำหรับ 18+)</title>
+<link rel="icon" href="data:," />
+<style>
+  :root{--bg:#0d0f12;--card:#121416;--muted:#9aa0a6;--accent:#ffb86b}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:#fff}
+  header{padding:16px;text-align:center;border-bottom:1px solid #0f1113}
+  h1{margin:0;font-size:1.25rem}
+  #wrap{display:flex;gap:16px;padding:16px;flex-wrap:wrap;justify-content:center}
+  .channel{width:260px;background:var(--card);border-radius:10px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.6);text-align:center}
+  .thumb{height:140px;background:#0b0b0b;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .thumb img{max-width:100%;max-height:100%}
+  .meta{padding:8px}
+  .meta h3{margin:6px 0;font-size:1rem}
+  .meta p{margin:0;color:var(--muted);font-size:.85rem}
+  button{margin-top:8px;padding:8px 12px;border-radius:8px;border:0;background:var(--accent);cursor:pointer;color:#111;font-weight:600}
+  .locked{opacity:.5;position:relative}
+  .lock-badge{position:absolute;right:10px;top:10px;background:#f04848;color:#fff;padding:4px 8px;border-radius:999px;font-weight:700;font-size:.85rem}
+  #playerWrap{width:100%;max-width:980px;margin:18px auto;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);border-radius:12px}
+  #player{width:100%;height:480px;background:#000;border-radius:8px;outline:none}
+  #status{color:var(--muted);font-size:.9rem;margin-top:8px;text-align:center}
+  /* modal */
+  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:60;display:none}
+  .modal.show{display:flex}
+  .box{background:#101214;padding:18px;border-radius:10px;min-width:300px;border:1px solid #1a1d20}
+  .box h2{margin:0 0 8px 0}
+  .pin{width:100%;padding:10px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:#fff;margin-top:8px}
+  .row{display:flex;gap:8px;margin-top:12px}
+  .muted{color:var(--muted);font-size:.9rem;text-align:center;margin-top:8px}
+  @media(max-width:600px){ .channel{width:46%} #player{height:260px}}
+</style>
 </head>
 <body>
-
 <header>
-  <h1>เว็บดู IPTV - TV CHAK</h1>
-  <button class="link-btn" onclick="window.open('http://eloy.sportsontheweb.net/livetv.html', '_blank')">ไปยัง iptv-host</button>
+  <h1>IPTV Player — ล็อก 18+ ด้วย PIN</h1>
+  <div class="muted">เปิดจาก GitHub M3U (hls.js ใช้เล่น .m3u8)</div>
 </header>
 
-<main>
-  <div id="channelList"></div>
-  <div id="playerContainer">
-    <video id="player" controls autoplay></video>
-  </div>
+<div id="playerWrap">
+  <video id="player" controls playsinline></video>
+  <div id="status">ยังไม่ได้เลือกช่อง</div>
+</div>
+
+<main id="wrap">
+  <div style="width:100%;text-align:center;color:var(--muted);margin-bottom:6px">กำลังโหลดรายการช่อง...</div>
 </main>
+
+<!-- PIN modal -->
+<div id="pinModal" class="modal">
+  <div class="box">
+    <h2>ช่องสำหรับผู้ใหญ่ 🔞</h2>
+    <div>กรุณาใส่รหัสเพื่อเข้าถึงช่อง 18+</div>
+    <input id="pinInput" class="pin" type="password" placeholder="ใส่ PIN" />
+    <div class="row">
+      <button id="pinOk">ยืนยัน</button>
+      <button id="pinCancel" style="background:#444;color:#fff">ยกเลิก</button>
+    </div>
+    <div class="muted">ทิป: เปลี่ยนค่า PIN ในตัวแปร <code>PIN_CODE</code> ของไฟล์นี้</div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
-  // รายการช่อง IPTV
-  const channels = [
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/4kmiht", name: "CH7", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffac/7hd/7hd.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/pkxl3", name: "Nation", url: "https://nationtv-1jdcjo.cdn.byteark.com/fleetstream/nationtvlive/1080p/index.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/d2ksaw", name: "CH8", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffbe/ch8/ch8.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/r0we5", name: "Nation CHAK", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffcc/nation/nation.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/9f0xf", name: "CH3 HD", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffae/3hd/3hd.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/l869p", name: "TNN", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffdc/tnn/tnn.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/b8u7i", name: "TPTV", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffec/tptv/tptv.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/65b58o", name: "Amarin HD", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffad/amarin/amarin.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/409e5", name: "Thairath HD", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffaf/thairath/thairath.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/3gdhl", name: "Channel 8", url: "https://cdn-th-vip.login.in.th:443/ch8/ch8/chunklist.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/dguzu", name: "Workpoint HD", url: "https://global-media.sooplive.com/live/video/workpoint/1920x1080/playlist.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/dguzu", name: "Workpoint", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffcb/workpoint/workpoint.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/49yt5v", name: "NBT", url: "https://lb1-live-mv.v2h-cdn.com/hls/fffe/nbt/nbt.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://bit.ly/3aaooNF", name: "CH5", url: "https://lb1-live-mv.v2h-cdn.com/hls/fffb/5hd/5hd.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/y2z253", name: "Thai Chaiyo", url: "https://live-iptv.thaichaiyo.tv/tcy/live-720P.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/q3t23i", name: "Looktung Network FM", url: "http://vip.login.in.th:1935/looktungnetwork1/looktungnetwork1/playlist.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/dnycy", name: "Looktung LAKTHAI FM", url: "http://radio11.plathong.net:8896/;stream.mp3" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/unxb8", name: "JKN", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffda/jkn18/jkn18.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://bit.ly/3R57wIK", name: "Thai PBS", url: "https://lb1-live-mv.v2h-cdn.com/hls/fffd/tpbs/tpbs.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://is.gd/BEhrf8", name: "True sport", url: "https://is.gd/GNF8fw" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/ry89h", name: "T Sport", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffef/tsport/tsport.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/afnnk", name: "Mono 29", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffbc/mono29/mono29.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/83jvz", name: "Mcot", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffbb/mcot/mcot.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/ipdj6", name: "One", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffba/one/one.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/wmbwp", name: "PPTV", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffab/pptv/pptv.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/adt8o", name: "GMM25", url: "https://bcovlive-a.akamaihd.net/57d4bf695e80436d9335f4f50adbe438/ap-southeast-1/6415628290001/7e85dc4a59904e45b4fdffebd62e1d82/playlist_ssaiM.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/wmbwp", name: "GMM25", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffbf/gmm25/gmm25.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/0ws87l", name: "True 24", url: "https://lb1-live-mv.v2h-cdn.com/hls/ffca/true24/true24.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/s9j3kg", name: "News 1", url: "http://news1.live14.com/stream/news1.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/4nvv0", name: "Suwannabhumi", url: "https://live.bangkokstream.com:19360/suwannabhumi/suwannabhumi.m3u8" },
-    { group: "🇹🇭TV CHAK", logo: "https://n9.cl/baylk", name: "Police Chanell", url: "https://cdn-th-vip.livestreaming.in.th/policetv/policetv/playlist.m3u8" },
-    // ตัวอย่างหมวด MUSIC
-    { group: "🇹🇭TV CHAK MUSIC", logo: "https://n9.cl/g23v5", name: "Musica ʜᴅ | DANCE Latinos Hits 2K", url: "http://1.84423.xyz:8000/PSG@273Res/0OPSGMessi24/3182" },
-    { group: "🇹🇭TV CHAK MUSIC", logo: "https://bit.ly/3ybR40A", name: "KroneHit TV Music", url: "https://bitcdn-kronehit.bitmovin.com/v2/hls/playlist.m3u8" }
-  ];
+/* ============== CONFIG ============== */
+const M3U_URL = "https://raw.githubusercontent.com/swisszz/CHAKIPTV/refs/heads/main/CHAKIPTV";
+const PIN_CODE = "1234"; // <-- เปลี่ยน PIN ตรงนี้ตามต้องการ
+/* ==================================== */
 
-  const video = document.getElementById('player');
-  const channelList = document.getElementById('channelList');
-  let hls;
+const wrap = document.getElementById("wrap");
+const player = document.getElementById("player");
+const status = document.getElementById("status");
+const pinModal = document.getElementById("pinModal");
+const pinInput = document.getElementById("pinInput");
+const pinOk = document.getElementById("pinOk");
+const pinCancel = document.getElementById("pinCancel");
 
+let channels = [];
+let unlocked = false;
+let currentUrl = "";
+let hlsInstance = null;
 
-  // สร้างลิสต์ช่องใน sidebar
-  function buildChannelList() {
-    channelList.innerHTML = '';
-    channels.forEach((channel, index) => {
-      const div = document.createElement('div');
-      div.className = 'channel';
-      div.dataset.index = index;
+function setStatus(text){ status.textContent = text; }
 
-      div.innerHTML = `
-        <img src="${channel.logo}" alt="${channel.name} logo" />
-        <span>${channel.name}</span>
-      `;
-
-      div.addEventListener('click', () => {
-        selectChannel(index);
-      });
-
-      channelList.appendChild(div);
-    });
+async function fetchM3U(){
+  try{
+    const r = await fetch(M3U_URL);
+    if(!r.ok) throw new Error("ไม่สามารถโหลด M3U (status " + r.status + ")");
+    const txt = await r.text();
+    parseM3U(txt);
+    renderChannels();
+  }catch(err){
+    wrap.innerHTML = `<div style="color:#f66">${err.message}</div>`;
   }
+}
 
-  // เล่นช่อง
-  function selectChannel(index) {
-    const channel = channels[index];
-
-    // ไฮไลท์ช่องที่เลือก
-    document.querySelectorAll('#channelList .channel').forEach((el) => {
-      el.classList.remove('selected');
-    });
-    document.querySelector(`#channelList .channel[data-index="${index}"]`).classList.add('selected');
-
-    // เล่นช่อง m3u8 ผ่าน hls.js หรือ native
-    if (hls) {
-      hls.destroy();
-      hls = null;
-    }
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = channel.url;
-      video.play();
-    } else if (Hls.isSupported()) {
-      hls = new Hls();
-      hls.loadSource(channel.url);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play();
+function parseM3U(text){
+  channels = [];
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    if(line.startsWith("#EXTINF:")){
+      const info = line;
+      const url = lines[i+1] || "";
+      const title = (info.split(",").slice(1).join(",") || "Untitled").trim();
+      const logoMatch = info.match(/tvg-logo="([^"]+)"/i);
+      const groupMatch = info.match(/group-title="([^"]+)"/i);
+      channels.push({
+        title,
+        url,
+        logo: logoMatch ? logoMatch[1] : "",
+        group: groupMatch ? groupMatch[1] : ""
       });
-    } else {
-      alert('ไม่รองรับการเล่นวิดีโอ HLS ในเบราว์เซอร์นี้');
     }
   }
+}
 
-  // เริ่มต้น
-  buildChannelList();
-  selectChannel(0); // เล่นช่องแรกอัตโนมัติ
+function renderChannels(){
+  wrap.innerHTML = "";
+  if(channels.length===0){
+    wrap.innerHTML = '<div style="color:var(--muted)">ไม่พบรายการช่องในไฟล์ M3U</div>';
+    return;
+  }
+  channels.forEach(ch=>{
+    const div = document.createElement("div");
+    div.className = "channel" + (ch.group && ch.group.includes("18+") ? " locked" : "");
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+    const img = document.createElement("img");
+    img.onerror = ()=>{ img.src = "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'><rect fill=\'%23111111\' width=\'100%\' height=\'100%\'/></svg>"; }
+    img.src = ch.logo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23131313' width='100%' height='100%'/></svg>";
+    thumb.appendChild(img);
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `<h3>${escapeHtml(ch.title)}</h3><p>${escapeHtml(ch.group||"")}</p>`;
+    const btn = document.createElement("button");
+    btn.textContent = (ch.group && ch.group.includes("18+")) ? "🔒 ปลดล็อก / เล่น" : "▶ เล่น";
+    btn.onclick = ()=> onPlayClick(ch);
+    div.appendChild(thumb);
+    if(ch.group && ch.group.includes("18+")){
+      const badge = document.createElement("div");
+      badge.className = "lock-badge";
+      badge.textContent = "18+";
+      div.appendChild(badge);
+    }
+    div.appendChild(meta);
+    div.appendChild(btn);
+    wrap.appendChild(div);
+  });
+}
 
+function onPlayClick(channel){
+  if(channel.group && channel.group.includes("18+") && !unlocked){
+    // show modal
+    pinInput.value = "";
+    pinModal.classList.add("show");
+    pinInput.focus();
+    // attach ok handler to play when validated
+    const okHandler = ()=>{
+      if(pinInput.value === PIN_CODE){
+        unlocked = true;
+        pinModal.classList.remove("show");
+        playChannel(channel.url);
+        removeListeners();
+      }else{
+        alert("รหัสไม่ถูกต้อง");
+      }
+    };
+    const cancelHandler = ()=>{
+      pinModal.classList.remove("show");
+      removeListeners();
+    };
+    function removeListeners(){
+      pinOk.removeEventListener("click", okHandler);
+      pinCancel.removeEventListener("click", cancelHandler);
+      pinInput.removeEventListener("keydown", enterHandler);
+    }
+    function enterHandler(e){
+      if(e.key === "Enter") okHandler();
+    }
+    pinOk.addEventListener("click", okHandler);
+    pinCancel.addEventListener("click", cancelHandler);
+    pinInput.addEventListener("keydown", enterHandler);
+    return;
+  }
+  playChannel(channel.url);
+}
+
+function playChannel(url){
+  currentUrl = url;
+  setStatus("กำลังเล่น: " + url);
+  // destroy previous hls instance if any
+  if(hlsInstance){
+    try{ hlsInstance.destroy(); }catch(e){}
+    hlsInstance = null;
+  }
+  // if browser can play HLS natively
+  if(player.canPlayType('application/vnd.apple.mpegurl')){
+    player.src = url;
+    player.play().catch(()=>{ /* ignore */ });
+  }else if(window.Hls && Hls.isSupported()){
+    hlsInstance = new Hls();
+    hlsInstance.attachMedia(player);
+    hlsInstance.on(Hls.Events.MEDIA_ATTACHED, ()=>{
+      hlsInstance.loadSource(url);
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+        player.play().catch(()=>{});
+      });
+    });
+    hlsInstance.on(Hls.Events.ERROR, function(event, data){
+      console.error("hls error", data);
+      if(data && data.type === 'networkError'){
+        setStatus("เกิดข้อผิดพลาดในการดึงสตรีม (network).");
+      }else if(data && data.type === 'mediaError'){
+        setStatus("เกิดข้อผิดพลาดด้านมีเดีย (media).");
+      }else{
+        setStatus("เกิดข้อผิดพลาด: " + (data && data.details || "unknown"));
+      }
+    });
+  }else{
+    setStatus("เบราว์เซอร์นี้ไม่รองรับ HLS และ hls.js ไม่สามารถทำงานได้");
+  }
+}
+
+/* small helper to avoid XSS in titles */
+function escapeHtml(str){
+  return String(str || "").replace(/[&<>"']/g, function(m){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]; });
+}
+
+/* init */
+fetchM3U();
 </script>
-
 </body>
 </html>
