@@ -191,7 +191,7 @@ function onPlayClick(channel){
 
 function playChannel(url){
   currentUrl = url;
-  setStatus("กำลังเล่น: " + url);
+  setStatus("กำลังเล่น...");
   // destroy previous hls instance if any
   if(hlsInstance){
     try{ hlsInstance.destroy(); }catch(e){}
@@ -233,5 +233,12 @@ function escapeHtml(str){
 /* init */
 fetchM3U();
 </script>
+<script>
+  // ป้องกันการคลิกขวาบนหน้าเว็บ
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault(); // ป้องกันไม่ให้แสดงเมนูคลิกขวา
+  });
+</script>
+
 </body>
 </html>
