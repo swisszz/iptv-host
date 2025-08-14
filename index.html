@@ -266,7 +266,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
-  const M3U_URL = "http://99d0dce18193.iedem.com/playlists/uplist/4dfcfb9bf28d57df404b0d2216f615c4/playlist.m3u8";
+  const M3U_URL = "http://99d0dce18193.iedem.com/playlists/uplist/4dfcfb9bf28d57df404b0d2216f615c4/playlist.m3u8";  // URL ของไฟล์ m3u8
   const PIN_CODE = "7474";
 
   const list = document.getElementById("channelList");
@@ -322,138 +322,122 @@
   }
 
   function renderChannels() {
-  list.innerHTML = "";
-  if (channels.length === 0) {
-    list.innerHTML = '<div style="color:var(--muted)">ไม่พบรายการช่องในไฟล์ M3U</div>';
-    return;
+    list.innerHTML = "";
+    if (channels.length === 0) {
+      list.innerHTML = '<div style="color:var(--muted)">ไม่พบรายการช่องในไฟล์ M3U</div>';
+      return;
+    }
+
+    const wrap = document.createElement("div");
+    list.appendChild(wrap);
+
+    channels.forEach(ch => {
+      const div = document.createElement("div");
+      div.className = "channel" + (ch.group && ch.group.includes("18+") ? " locked" : "");
+
+      const thumb = document.createElement("div");
+      thumb.className = "thumb";
+
+      const img = document.createElement("img");
+      img.onerror = () => {
+        img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23111111' width='100%' height='100%'/></svg>";
+      };
+      img.src = ch.logo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23131313' width='100%' height='100%'/></svg>";
+      thumb.appendChild(img);
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.innerHTML = `<h3>${escapeHtml(ch.title)}</h3><p>${escapeHtml(ch.group || "")}</p>`;
+
+      const btn = document.createElement("button");
+      btn.textContent = (ch.group && ch.group.includes("18+")) ? "🔒 ปลดล็อก / เล่น" : "▶ เล่น";
+      btn.onclick = () => onPlayClick(ch);
+
+      div.appendChild(thumb);
+      if (ch.group && ch.group.includes("18+")) {
+        const badge = document.createElement("div");
+        badge.className = "lock-badge";
+        badge.textContent = "18+";
+        div.appendChild(badge);
+      }
+      div.appendChild(meta);
+      div.appendChild(btn);
+      wrap.appendChild(div);
+    });
   }
 
-  const wrap = document.createElement("div"); // ✅ เพิ่มบรรทัดนี้
-  list.appendChild(wrap); // ✅ และบรรทัดนี้เพื่อให้ wrap ใช้งานได้
-
-  channels.forEach(ch => {
-    const div = document.createElement("div");
-    div.className = "channel" + (ch.group && ch.group.includes("18+") ? " locked" : "");
-
-    const thumb = document.createElement("div");
-    thumb.className = "thumb";
-
-    const img = document.createElement("img");
-    img.onerror = () => {
-      img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23111111' width='100%' height='100%'/></svg>";
-    };
-    img.src = ch.logo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23131313' width='100%' height='100%'/></svg>";
-    thumb.appendChild(img);
-
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.innerHTML = `<h3>${escapeHtml(ch.title)}</h3><p>${escapeHtml(ch.group || "")}</p>`;
-
-    const btn = document.createElement("button");
-    btn.textContent = (ch.group && ch.group.includes("18+")) ? "🔒 ปลดล็อก / เล่น" : "▶ เล่น";
-    btn.onclick = () => onPlayClick(ch);
-
-    div.appendChild(thumb);
-    if (ch.group && ch.group.includes("18+")) {
-      const badge = document.createElement("div");
-      badge.className = "lock-badge";
-      badge.textContent = "18+";
-      div.appendChild(badge);
-    }
-    div.appendChild(meta);
-    div.appendChild(btn);
-    wrap.appendChild(div); // ✅ ตอนนี้ wrap มีอยู่จริงแล้ว
-  });
-}
-
-
-function onPlayClick(channel){
-  if(channel.group && channel.group.includes("18+") && !unlocked){
-    // show modal
-    pinInput.value = "";
-    pinModal.classList.add("show");
-    pinInput.focus();
-    // attach ok handler to play when validated
-    const okHandler = ()=>{
-      if(pinInput.value === PIN_CODE){
-        unlocked = true;
+  function onPlayClick(channel){
+    if(channel.group && channel.group.includes("18+") && !unlocked){
+      pinInput.value = "";
+      pinModal.classList.add("show");
+      pinInput.focus();
+      const okHandler = ()=> {
+        if(pinInput.value === PIN_CODE){
+          unlocked = true;
+          pinModal.classList.remove("show");
+          playChannel(channel.url);
+          removeListeners();
+        } else {
+          alert("รหัสไม่ถูกต้อง");
+        }
+      };
+      const cancelHandler = ()=> {
         pinModal.classList.remove("show");
-        playChannel(channel.url);
         removeListeners();
-      }else{
-        alert("รหัสไม่ถูกต้อง");
+      };
+      function removeListeners() {
+        pinOk.removeEventListener("click", okHandler);
+        pinCancel.removeEventListener("click", cancelHandler);
+        pinInput.removeEventListener("keydown", enterHandler);
       }
-    };
-    const cancelHandler = ()=>{
-      pinModal.classList.remove("show");
-      removeListeners();
-    };
-    function removeListeners(){
-      pinOk.removeEventListener("click", okHandler);
-      pinCancel.removeEventListener("click", cancelHandler);
-      pinInput.removeEventListener("keydown", enterHandler);
+      function enterHandler(e) {
+        if(e.key === "Enter") okHandler();
+      }
+      pinOk.addEventListener("click", okHandler);
+      pinCancel.addEventListener("click", cancelHandler);
+      pinInput.addEventListener("keydown", enterHandler);
+      return;
     }
-    function enterHandler(e){
-      if(e.key === "Enter") okHandler();
-    }
-    pinOk.addEventListener("click", okHandler);
-    pinCancel.addEventListener("click", cancelHandler);
-    pinInput.addEventListener("keydown", enterHandler);
-    return;
+    playChannel(channel.url);
   }
-  playChannel(channel.url);
-}
 
-function playChannel(url){
-  currentUrl = url;
-  setStatus("กำลังเล่น...");
-  // destroy previous hls instance if any
-  if(hlsInstance){
-    try{ hlsInstance.destroy(); }catch(e){}
-    hlsInstance = null;
-  }
-  // if browser can play HLS natively
-  if(player.canPlayType('application/vnd.apple.mpegurl')){
-    player.src = url;
-    player.play().catch(()=>{ /* ignore */ });
-  }else if(window.Hls && Hls.isSupported()){
-    hlsInstance = new Hls();
-    hlsInstance.attachMedia(player);
-    hlsInstance.on(Hls.Events.MEDIA_ATTACHED, ()=>{
-      hlsInstance.loadSource(url);
-      hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
-        player.play().catch(()=>{});
+  function playChannel(url) {
+    currentUrl = url;
+    setStatus("กำลังเล่น...");
+    if(hlsInstance){
+      try { hlsInstance.destroy(); } catch (e) {}
+      hlsInstance = null;
+    }
+    if(player.canPlayType('application/vnd.apple.mpegurl')) {
+      player.src = url;
+      player.play().catch(()=>{});
+    } else if(window.Hls && Hls.isSupported()) {
+      hlsInstance = new Hls();
+      hlsInstance.attachMedia(player);
+      hlsInstance.on(Hls.Events.MEDIA_ATTACHED, ()=> {
+        hlsInstance.loadSource(url);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+          player.play().catch(()=>{});
+        });
       });
-    });
-    hlsInstance.on(Hls.Events.ERROR, function(event, data){
-      console.error("hls error", data);
-      if(data && data.type === 'networkError'){
-        setStatus("เกิดข้อผิดพลาดในการดึงสตรีม (network).");
-      }else if(data && data.type === 'mediaError'){
-        setStatus("เกิดข้อผิดพลาดด้านมีเดีย (media).");
-      }else{
-        setStatus("เกิดข้อผิดพลาด: " + (data && data.details || "unknown"));
-      }
-    });
-  }else{
-    setStatus("เบราว์เซอร์นี้ไม่รองรับ HLS และ hls.js ไม่สามารถทำงานได้");
+      hlsInstance.on(Hls.Events.ERROR, function(event, data) {
+        console.error("hls error", data);
+        if(data && data.type === 'networkError') {
+          setStatus("เกิดข้อผิดพลาดในการดึงสตรีม (network).");
+        } else if(data && data.type === 'mediaError') {
+          setStatus("เกิดข้อผิดพลาดด้านมีเดีย (media).");
+        } else {
+          setStatus("เกิดข้อผิดพลาด: " + (data && data.details || "unknown"));
+        }
+      });
+    } else {
+      setStatus("เบราว์เซอร์นี้ไม่รองรับ HLS และ hls.js ไม่สามารถทำงานได้");
+    }
   }
-}
 
-/* small helper to avoid XSS in titles */
-function escapeHtml(str){
-  return String(str || "").replace(/[&<>"']/g, function(m){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]; });
-}
+  fetchM3U();
+</script>
 
-/* init */
-fetchM3U();
-</script>
-<script>
-  // ป้องกันการคลิกขวาบนหน้าเว็บ
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault(); // ป้องกันไม่ให้แสดงเมนูคลิกขวา
-  });
-</script>
 
 </body>
 </html>
