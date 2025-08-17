@@ -1,54 +1,256 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>IPTV Player (SWISSZZ)</title>
-<link rel="icon" href="data:," />
-<style>
-  :root{--bg:#0d0f12;--card:#121416;--muted:#9aa0a6;--accent:#ffb86b}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:#fff}
-  header{padding:16px;text-align:center;border-bottom:1px solid #0f1113}
-  h1{margin:0;font-size:1.25rem}
-  #wrap{display:flex;gap:16px;padding:16px;flex-wrap:wrap;justify-content:center}
-  .channel{width:260px;background:var(--card);border-radius:10px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.6);text-align:center}
-  .thumb{height:140px;background:#0b0b0b;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  .thumb img{max-width:100%;max-height:100%}
-  .meta{padding:8px}
-  .meta h3{margin:6px 0;font-size:1rem}
-  .meta p{margin:0;color:var(--muted);font-size:.85rem}
-  button{margin-top:8px;padding:8px 12px;border-radius:8px;border:0;background:var(--accent);cursor:pointer;color:#111;font-weight:600}
-  .locked{opacity:.5;position:relative}
-  .lock-badge{position:absolute;right:10px;top:10px;background:#f04848;color:#fff;padding:4px 8px;border-radius:999px;font-weight:700;font-size:.85rem}
-  #playerWrap{width:100%;max-width:980px;margin:18px auto;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);border-radius:12px}
-  #player{width:100%;height:480px;background:#000;border-radius:8px;outline:none}
-  #status{color:var(--muted);font-size:.9rem;margin-top:8px;text-align:center}
-  /* modal */
-  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:60;display:none}
-  .modal.show{display:flex}
-  .box{background:#101214;padding:18px;border-radius:10px;min-width:300px;border:1px solid #1a1d20}
-  .box h2{margin:0 0 8px 0}
-  .pin{width:100%;padding:10px;border-radius:8px;border:1px solid #222;background:#0b0b0b;color:#fff;margin-top:8px}
-  .row{display:flex;gap:8px;margin-top:12px}
-  .muted{color:var(--muted);font-size:.9rem;text-align:center;margin-top:8px}
-  @media(max-width:600px){ .channel{width:46%} #player{height:260px}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>"คำเตือน: ห้ามนำไปจำหน่ายหรือใช้ในเชิงพาณิชย์โดยเด็ดขาด จัดทำขึ้นเพื่อการรับชมส่วนตัวเท่านั้น"</title>
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --card: #121416;
+      --muted: #9aa0a6;
+      --accent: #ffb86b;
+    }
+.fixed-warning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #222;
+  color: #ffcc80;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  z-index: 1000;
+  border-bottom: 2px solid #ff9800;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.fixed-warning strong {
+  color: #ffc107;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #ffcc80;
+  font-size: 1.2rem;
+  position: absolute;
+  right: 12px;
+  top: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: var(--bg);
+      color: #fff;
+    }
+
+    header {
+      padding: 16px;
+      text-align: center;
+      border-bottom: 1px solid #0f1113;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    #mainLayout {
+      display: flex;
+      height: calc(100vh - 80px);
+      padding: 16px;
+      gap: 16px;
+      box-sizing: border-box;
+    }
+
+    #channelList {
+      width: 300px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .channel {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .6);
+      text-align: center;
+    }
+
+    .thumb {
+      height: 140px;
+      background: #0b0b0b;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .thumb img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .meta {
+      padding: 8px;
+    }
+
+    .meta h3 {
+      margin: 6px 0;
+      font-size: 1rem;
+    }
+
+    .meta p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    button {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 0;
+      background: var(--accent);
+      cursor: pointer;
+      color: #111;
+      font-weight: 600;
+    }
+
+    .locked {
+      opacity: .5;
+      position: relative;
+    }
+
+    .lock-badge {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      background: #f04848;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: .85rem;
+    }
+
+    #playerSection {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #player {
+      width: 100%;
+      height: 480px;
+      background: #000;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    #status {
+      color: var(--muted);
+      font-size: .9rem;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, .6);
+      z-index: 60;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .box {
+      background: #101214;
+      padding: 18px;
+      border-radius: 10px;
+      min-width: 300px;
+      border: 1px solid #1a1d20;
+    }
+
+    .box h2 {
+      margin: 0 0 8px 0;
+    }
+
+    .pin {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #222;
+      background: #0b0b0b;
+      color: #fff;
+      margin-top: 8px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 800px) {
+      #mainLayout {
+        flex-direction: column;
+      }
+
+      #channelList {
+        width: 100%;
+        max-height: 300px;
+      }
+
+      #player {
+        height: 260px;
+      }
+    }
+  </style>
 </head>
 <body>
+<div class="fixed-warning" id="fixedWarning">
+  ⚠️ <strong>คำเตือน:</strong> ห้ามนำเนื้อหานี้ไปจำหน่ายหรือใช้ในเชิงพาณิชย์โดยเด็ดขาด — จัดทำขึ้นเพื่อการรับชมส่วนตัวเท่านั้น
+  <button class="close-btn" onclick="document.getElementById('fixedWarning').style.display='none';">×</button>
+</div>
+
 <header>
   <h1>IPTV Player — SWISSZZ</h1>
 </header>
 
-<div id="playerWrap">
-  <video id="player" controls playsinline></video>
-  <div id="status">ยังไม่ได้เลือกช่อง</div>
+<div id="mainLayout">
+  <aside id="channelList">
+    <div style="text-align:center;color:var(--muted);margin-bottom:6px">"คำเตือน: ห้ามนำไปจำหน่ายหรือใช้ในเชิงพาณิชย์โดยเด็ดขาด จัดทำขึ้นเพื่อการรับชมส่วนตัวเท่านั้น"</div>
+  </aside>
+
+  <section id="playerSection">
+    <video id="player" controls playsinline></video>
+    <div id="status">ยังไม่ได้เลือกช่อง</div>
+  </section>
 </div>
 
-<main id="wrap">
-  <div style="width:100%;text-align:center;color:var(--muted);margin-bottom:6px">กำลังโหลดรายการช่อง...</div>
-</main>
-
-<!-- PIN modal -->
+<!-- PIN Modal -->
 <div id="pinModal" class="modal">
   <div class="box">
     <h2>ช่องสำหรับผู้ใหญ่ 🔞</h2>
@@ -58,88 +260,101 @@
       <button id="pinOk">ยืนยัน</button>
       <button id="pinCancel" style="background:#444;color:#fff">ยกเลิก</button>
     </div>
-    <div class="muted"> <code>PIN_CODE</code> ของไฟล์นี้</div>
+    <div class="muted">PIN = <code>7474</code></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
-/* ============== CONFIG ============== */
-const M3U_URL = "http://0f30f0ff90d2.iedem.com/playlists/uplist/bffaa9705d50cbf3ea1c83a217b7e1d7/playlist.m3u8";
-const PIN_CODE = "7474"; 
-/* ==================================== */
+  const M3U_URL = "https://raw.githubusercontent.com/swisszz/CHAKIPTV/refs/heads/main/CHAKIPTV";
+  const PIN_CODE = "7474";
 
-const wrap = document.getElementById("wrap");
-const player = document.getElementById("player");
-const status = document.getElementById("status");
-const pinModal = document.getElementById("pinModal");
-const pinInput = document.getElementById("pinInput");
-const pinOk = document.getElementById("pinOk");
-const pinCancel = document.getElementById("pinCancel");
+  const list = document.getElementById("channelList");
+  const player = document.getElementById("player");
+  const status = document.getElementById("status");
+  const pinModal = document.getElementById("pinModal");
+  const pinInput = document.getElementById("pinInput");
+  const pinOk = document.getElementById("pinOk");
+  const pinCancel = document.getElementById("pinCancel");
 
-let channels = [];
-let unlocked = false;
-let currentUrl = "";
-let hlsInstance = null;
+  let channels = [], unlocked = false, currentUrl = "", hlsInstance = null;
 
-function setStatus(text){ status.textContent = text; }
-
-async function fetchM3U(){
-  try{
-    const r = await fetch(M3U_URL);
-    if(!r.ok) throw new Error("ไม่สามารถโหลด M3U (status " + r.status + ")");
-    const txt = await r.text();
-    parseM3U(txt);
-    renderChannels();
-  }catch(err){
-    wrap.innerHTML = `<div style="color:#f66">${err.message}</div>`;
+  function escapeHtml(str) {
+    return String(str || "").replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m]);
   }
-}
 
-function parseM3U(text){
-  channels = [];
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  for(let i=0;i<lines.length;i++){
-    const line = lines[i];
-    if(line.startsWith("#EXTINF:")){
-      const info = line;
-      const url = lines[i+1] || "";
-      const title = (info.split(",").slice(1).join(",") || "Untitled").trim();
-      const logoMatch = info.match(/tvg-logo="([^"]+)"/i);
-      const groupMatch = info.match(/group-title="([^"]+)"/i);
-      channels.push({
-        title,
-        url,
-        logo: logoMatch ? logoMatch[1] : "",
-        group: groupMatch ? groupMatch[1] : ""
-      });
+  function setStatus(text) {
+    status.textContent = text;
+  }
+
+  async function fetchM3U() {
+    try {
+      const res = await fetch(M3U_URL);
+      if (!res.ok) throw new Error("ไม่สามารถโหลด M3U (status " + res.status + ")");
+      const txt = await res.text();
+      parseM3U(txt);
+      renderChannels();
+    } catch (err) {
+      list.innerHTML = `<div style="color:#f66">${err.message}</div>`;
     }
   }
-}
 
-function renderChannels(){
-  wrap.innerHTML = "";
-  if(channels.length===0){
-    wrap.innerHTML = '<div style="color:var(--muted)">ไม่พบรายการช่องในไฟล์ M3U</div>';
+  function parseM3U(text) {
+    channels = [];
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith("#EXTINF:")) {
+        const info = lines[i];
+        const url = lines[i + 1] || "";
+        const title = (info.split(",").slice(1).join(",") || "Untitled").trim();
+        const logo = info.match(/tvg-logo="([^"]+)"/i);
+        const group = info.match(/group-title="([^"]+)"/i);
+        channels.push({
+          title,
+          url,
+          logo: logo ? logo[1] : "",
+          group: group ? group[1] : ""
+        });
+      }
+    }
+  }
+
+  function renderChannels() {
+  list.innerHTML = "";
+  if (channels.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted)">ไม่พบรายการช่องในไฟล์ M3U</div>';
     return;
   }
-  channels.forEach(ch=>{
+
+  const wrap = document.createElement("div"); // ✅ เพิ่มบรรทัดนี้
+  list.appendChild(wrap); // ✅ และบรรทัดนี้เพื่อให้ wrap ใช้งานได้
+
+  channels.forEach(ch => {
     const div = document.createElement("div");
     div.className = "channel" + (ch.group && ch.group.includes("18+") ? " locked" : "");
+
     const thumb = document.createElement("div");
     thumb.className = "thumb";
+
     const img = document.createElement("img");
-    img.onerror = ()=>{ img.src = "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'><rect fill=\'%23111111\' width=\'100%\' height=\'100%\'/></svg>"; }
+    img.onerror = () => {
+      img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23111111' width='100%' height='100%'/></svg>";
+    };
     img.src = ch.logo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect fill='%23131313' width='100%' height='100%'/></svg>";
     thumb.appendChild(img);
+
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.innerHTML = `<h3>${escapeHtml(ch.title)}</h3><p>${escapeHtml(ch.group||"")}</p>`;
+    meta.innerHTML = `<h3>${escapeHtml(ch.title)}</h3><p>${escapeHtml(ch.group || "")}</p>`;
+
     const btn = document.createElement("button");
     btn.textContent = (ch.group && ch.group.includes("18+")) ? "🔒 ปลดล็อก / เล่น" : "▶ เล่น";
-    btn.onclick = ()=> onPlayClick(ch);
+    btn.onclick = () => onPlayClick(ch);
+
     div.appendChild(thumb);
-    if(ch.group && ch.group.includes("18+")){
+    if (ch.group && ch.group.includes("18+")) {
       const badge = document.createElement("div");
       badge.className = "lock-badge";
       badge.textContent = "18+";
@@ -147,19 +362,19 @@ function renderChannels(){
     }
     div.appendChild(meta);
     div.appendChild(btn);
-    wrap.appendChild(div);
+    wrap.appendChild(div); // ✅ ตอนนี้ wrap มีอยู่จริงแล้ว
   });
 }
 
-function onPlayClick(channel){
-  // Track channel click
-  trackChannelClick(channel);
 
+function onPlayClick(channel){
   if(channel.group && channel.group.includes("18+") && !unlocked){
+    // show modal
     pinInput.value = "";
     pinModal.classList.add("show");
     pinInput.focus();
-    const okHandler = ()=> {
+    // attach ok handler to play when validated
+    const okHandler = ()=>{
       if(pinInput.value === PIN_CODE){
         unlocked = true;
         pinModal.classList.remove("show");
@@ -169,7 +384,7 @@ function onPlayClick(channel){
         alert("รหัสไม่ถูกต้อง");
       }
     };
-    const cancelHandler = ()=> {
+    const cancelHandler = ()=>{
       pinModal.classList.remove("show");
       removeListeners();
     };
@@ -192,20 +407,19 @@ function onPlayClick(channel){
 function playChannel(url){
   currentUrl = url;
   setStatus("กำลังเล่น...");
-  // Track the start of viewing
-  trackChannelView(url);
-
+  // destroy previous hls instance if any
   if(hlsInstance){
     try{ hlsInstance.destroy(); }catch(e){}
     hlsInstance = null;
   }
+  // if browser can play HLS natively
   if(player.canPlayType('application/vnd.apple.mpegurl')){
     player.src = url;
     player.play().catch(()=>{ /* ignore */ });
   }else if(window.Hls && Hls.isSupported()){
     hlsInstance = new Hls();
     hlsInstance.attachMedia(player);
-    hlsInstance.on(Hls.Events.MEDIA_ATTACHED, ()=> {
+    hlsInstance.on(Hls.Events.MEDIA_ATTACHED, ()=>{
       hlsInstance.loadSource(url);
       hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
         player.play().catch(()=>{});
@@ -213,41 +427,17 @@ function playChannel(url){
     });
     hlsInstance.on(Hls.Events.ERROR, function(event, data){
       console.error("hls error", data);
-      setStatus("เกิดข้อผิดพลาด: " + (data && data.details || "unknown"));
+      if(data && data.type === 'networkError'){
+        setStatus("เกิดข้อผิดพลาดในการดึงสตรีม (network).");
+      }else if(data && data.type === 'mediaError'){
+        setStatus("เกิดข้อผิดพลาดด้านมีเดีย (media).");
+      }else{
+        setStatus("เกิดข้อผิดพลาด: " + (data && data.details || "unknown"));
+      }
     });
   }else{
     setStatus("เบราว์เซอร์นี้ไม่รองรับ HLS และ hls.js ไม่สามารถทำงานได้");
   }
-}
-
-// Track channel click
-function trackChannelClick(channel) {
-  console.log(`ช่อง ${channel.title} ถูกคลิกแล้ว`);
-  fetch('/track-click', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ channel: channel.title, url: channel.url })
-  })
-  .then(response => response.json())
-  .then(data => console.log('Data sent successfully:', data))
-  .catch(error => console.error('Error:', error));
-}
-
-// Track viewing of a channel
-function trackChannelView(url) {
-  console.log(`เริ่มดูช่องที่ URL: ${url}`);
-  fetch('/track-view', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ url: url })
-  })
-  .then(response => response.json())
-  .then(data => console.log('View data sent successfully:', data))
-  .catch(error => console.error('Error:', error));
 }
 
 /* small helper to avoid XSS in titles */
